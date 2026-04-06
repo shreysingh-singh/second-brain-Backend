@@ -20,6 +20,8 @@ app.use(
       "http://localhost:5175",
       "http://localhost:5176",
       "http://localhost:3000",
+      "https://second-brain-frontend-akwu.vercel.app",
+      "https://second-brain-frontend-akwu.vercel.app/",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -30,12 +32,11 @@ app.use(
 app.post("/", (req, res) => {
   res.json({ msg: `Hey it's working` });
 });
-//TODO - User already exist
+
 app.post("/api/v1/signup", async (req, res) => {
   try {
     console.log("📝 Signup request received:", req.body);
 
-    //Zod validation
     const zodValid = signupZod.safeParse(req.body);
 
     if (!zodValid.success) {
@@ -89,7 +90,7 @@ app.post("/api/v1/signin", async (req, res) => {
     return res.status(500).json({ msg: `Internal server error!` });
   }
 });
-//TODO. - if user id is deleted can't add content
+
 app.post("/api/v1/content", usermiddleware, async (req, res) => {
   const { title, link, type } = req.body;
   console.log("BODY:", req.body);
@@ -144,7 +145,6 @@ app.delete("/api/v1/content/:id", usermiddleware, async (req, res) => {
     const contentId = req.params.id;
     console.log("Content ID:", contentId);
 
-    //  validate ID
     if (!contentId || !mongoose.Types.ObjectId.isValid(contentId)) {
       return res.status(400).json({ msg: "Invalid content ID" });
     }
@@ -220,8 +220,9 @@ app.get("/api/v1/second-brain/:shareLink", async (req, res) => {
     if (!link) {
       return res.status(411).json({ msg: `Incorrect input` });
     }
-    //UserId
-    const content = await ContentModel.findOne({
+
+    // Get ALL content for this user
+    const content = await ContentModel.find({
       userId: link.userId,
     });
 
@@ -250,10 +251,11 @@ const startServer = async () => {
     await mongoose.connect(MONGODB_URI);
     console.log("Db connected ✅");
     app.listen(PORT, () => {
-      console.log(`http://localhost:${PORT}`);
+      console.log(`Server running on port ${PORT} 🚀`);
     });
   } catch (error) {
-    console.log("Db not connected ❌");
+    console.log("Db not connected ❌", error);
+    process.exit(1);
   }
 };
 startServer();
